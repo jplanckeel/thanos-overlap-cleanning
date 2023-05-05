@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/jplanckeel/thanos-overlap-cleanning/pkg"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -39,14 +39,15 @@ var rootCmd = &cobra.Command{
 	Short: "Thanos Overlaps Cleaning ",
 	Long:  `A cli to cleaning Overlaps in Thanos S3 Bucket`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logrus.Info("script starting")
 		pkg.CheckOverlap(dryrun, accessKey, secretKey, bucketName, region, provider, maxTime, minTime, labelsSelector, cacheDir, cachePurge)
-		fmt.Println("script finish")
+		logrus.Info("script is finished")
 	},
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		logrus.Error(err)
 		os.Exit(1)
 	}
 }

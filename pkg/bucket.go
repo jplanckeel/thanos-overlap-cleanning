@@ -65,14 +65,13 @@ func (c *client) listMeta() []string {
 	})
 	for object := range objectCh {
 		if object.Err != nil {
-			fmt.Println(object.Err)
+			logrus.Error(object.Err)
 			return nil
 		}
 
 		if strings.Contains(object.Key, "meta.json") {
 			// call getobject directly to not create object ?
 			metadatas = append(metadatas, object.Key)
-			// fmt.Println(object.Key)
 		}
 
 	}

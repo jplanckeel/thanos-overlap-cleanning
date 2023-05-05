@@ -16,7 +16,6 @@ func writeCache(meta string, key string, cacheDir string) error {
 
 	_, err := os.Stat(dirPath)
 	if os.IsNotExist(err) {
-		//TODO: add debug fmt.Println(dirPath)
 		err = os.MkdirAll(dirPath, 0755)
 		if err != nil {
 			return err

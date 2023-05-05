@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 
 	"github.com/sirupsen/logrus"
@@ -100,7 +99,7 @@ func CheckOverlap(dryrun bool, accessKey string, secretKey string, bucketName st
 		logrus.WithField("object", object).Debug("listing object")
 		if ulid := metaOverlap(allMetas, checkMeta); ulid != "" {
 			if dryrun {
-				fmt.Printf("file is overlapping: %s\n", ulid)
+				logrus.Info("file is overlapping: ", ulid)
 			} else {
 				c.removeObjects(object)
 			}
