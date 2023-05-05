@@ -20,7 +20,7 @@ type client struct {
 }
 
 func newClient(
-	endpoint string,
+	provider string,
 	bucketName string,
 	accessKey,
 	secretKey string,
@@ -31,9 +31,10 @@ func newClient(
 ) (*client, error) {
 
 	if bucketName == "" {
-		bucketName = fmt.Sprintf("scw-internal-mon-dev-%s-thanos", region)
+		logrus.Fatal("no bucket bucket name")
 	}
 
+	endpoint := getS3Endpoint(provider, region)
 	// Initialize minio client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
@@ -110,4 +111,43 @@ func (c *client) getObjectFileContent(objectName string) (string, error) {
 	logrus.Debug(ret)
 
 	return ret, nil
+}
+
+func (c *client) removeObjects(objectName string) {
+	logrus.Info("Remove object: ", c.bucketName, "/", objectName)
+
+	objectsCh := make(chan minio.ObjectInfo)
+	ctx := context.Background()
+
+	// Send object names that are needed to be removed to objectsCh
+	go func() {
+		defer close(objectsCh)
+		// List all objects from a bucket-name with a matching prefix.
+		for object := range c.minioClient.ListObjects(ctx, c.bucketName, minio.ListObjectsOptions{
+			Recursive: true,
+			Prefix:    objectName,
+		}) {
+			if object.Err != nil {
+				logrus.Fatalln(object.Err)
+			}
+			objectsCh <- object
+		}
+	}()
+
+	opts := minio.RemoveObjectsOptions{
+		GovernanceBypass: true,
+	}
+
+	for rErr := range c.minioClient.RemoveObjects(ctx, c.bucketName, objectsCh, opts) {
+		logrus.Warn("Error detected during deletion: ", rErr)
+	}
+
+}
+
+func getS3Endpoint(provider, region string) string {
+	if provider == "scw" {
+		return fmt.Sprintf("s3.%s.scw.cloud", region)
+	}
+
+	return fmt.Sprintf("s3.%s.amazonaws.com", region)
 }

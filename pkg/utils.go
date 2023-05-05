@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"fmt"
 	"strings"
 	"time"
 )
@@ -26,9 +25,7 @@ func checkTime(meta *metaData, minTime string, maxTime string) bool {
 	metaMaxT := time.UnixMilli(meta.MaxTime)
 
 	if minT.Before(metaMinT) && maxT.After(metaMaxT) {
-		fmt.Println("meta is true in time")
 		return true
 	}
-	//fmt.Printf("meta is false in time minT:%v MaxT:%v metaMinT:%v metaMaxT%v", minT, maxT, metaMinT, metaMaxT)
 	return false
 }

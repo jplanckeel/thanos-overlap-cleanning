@@ -49,3 +49,12 @@ func readCache(key string, cacheDir string) (string, error) {
 
 	return fmt.Sprintf("%s", content), nil
 }
+
+func purgeCache(cacheDir string) error {
+	err := os.RemoveAll(cacheDir)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

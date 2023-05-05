@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -61,8 +60,14 @@ func metaOverlap(allMetas map[string]*metaData, checkMeta *metaData) string {
 	return ""
 }
 
-func CheckOverlap(dryrun bool, accessKey string, secretKey string, bucketName string, region string, maxTime string, minTime string, labelsSelector string, cacheDir string) {
-	c, _ := newClient("s3.fr-par.scw.cloud", bucketName, accessKey, secretKey, region, maxTime, minTime, labelsSelector)
+func CheckOverlap(dryrun bool, accessKey string, secretKey string, bucketName string, region string, provider string, maxTime string, minTime string, labelsSelector string, cacheDir string, cachePurge bool) {
+
+	//purge cache directory
+	if cachePurge {
+		purgeCache(cacheDir)
+	}
+
+	c, _ := newClient(provider, bucketName, accessKey, secretKey, region, maxTime, minTime, labelsSelector)
 
 	var meta *metaData
 	allMetas := make(map[string]*metaData)
@@ -91,12 +96,14 @@ func CheckOverlap(dryrun bool, accessKey string, secretKey string, bucketName st
 
 	}
 
-	//res := make(map[string][]string)
 	for object, checkMeta := range allMetas {
 		logrus.WithField("object", object).Debug("listing object")
 		if ulid := metaOverlap(allMetas, checkMeta); ulid != "" {
-			fmt.Printf("labels: %v ulid: %v  maxtime: %v mintime: %v \n", checkMeta.Thanos.Labels, ulid, time.UnixMilli(checkMeta.MaxTime), time.UnixMilli(checkMeta.MinTime))
-			//res[fmt.Sprintf("%v", checkMeta.Thanos.Labels)] = appendOverlap(res[fmt.Sprintf("%v", checkMeta.Thanos.Labels)], checkMeta, ulid)
+			if dryrun {
+				fmt.Printf("file is overlapping: %s\n", ulid)
+			} else {
+				c.removeObjects(object)
+			}
 		}
 	}
 
